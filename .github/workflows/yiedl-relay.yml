@@ -1,0 +1,84 @@
+name: Yiedl Relay
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"  # daily at midnight UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: pip install pandas pyarrow requests
+
+      - name: Download full dataset
+        run: |
+          python - << 'EOF'
+          import requests
+          url = "https://api.yiedl.ai/yiedl/v1/downloadDataset?type=latest"
+          open("yiedl_full.parquet", "wb").write(requests.get(url).content)
+          EOF
+
+      - name: Extract last date only and save as yiedl_latest.parquet
+        run: |
+          python - << 'EOF'
+          import pandas as pd
+          df = pd.read_parquet("yiedl_full.parquet")
+          last_day = df["date"].max()
+          df_last = df[df["date"] == last_day]
+          df_last.to_parquet("yiedl_latest.parquet", index=False)
+          print("Last day:", last_day)
+          print("Rows:", len(df_last))
+          EOF
+
+      - name: Delete all old releases except 'latest'
+        run: |
+          python - << 'EOF'
+          import requests
+          import os
+
+          token = os.environ["PAT_TOKEN"]
+          owner = "${{ github.repository_owner }}"
+          repo = "${{ github.event.repository.name }}"
+
+          headers = {"Authorization": f"token {token}"}
+
+          releases = requests.get(
+              f"https://api.github.com/repos/{owner}/{repo}/releases",
+              headers=headers
+          ).json()
+
+          for r in releases:
+              tag = r["tag_name"]
+              release_id = r["id"]
+
+              if tag == "latest":
+                  continue
+
+              print(f"Deleting release {tag} (id={release_id})")
+              requests.delete(
+                  f"https://api.github.com/repos/{owner}/{repo}/releases/{release_id}",
+                  headers=headers
+              )
+          EOF
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create/Update Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          tag: "latest"
+          name: "Latest Yiedl Last-Day Dataset"
+          artifacts: "yiedl_latest.parquet"
+          allowUpdates: true
