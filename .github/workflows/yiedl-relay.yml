@@ -3,7 +3,7 @@ name: Yiedl Relay
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 1 * * *"  # daily at 1:30 UTC
+    - cron: "0 12 * * *"  # daily at 12 UTC
 
 jobs:
   build:
