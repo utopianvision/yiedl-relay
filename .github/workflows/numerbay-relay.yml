@@ -1,0 +1,85 @@
+name: NumerBay Relay
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * *"
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install numerapi numerbay
+
+      - name: Wait until 12:51 UTC, download submission, upload to NumerBay
+        env:
+          NUMERAI_PUBLIC_ID: ${{ secrets.NUMERAI_PUBLIC_ID }}
+          NUMERAI_SECRET_KEY: ${{ secrets.NUMERAI_SECRET_KEY }}
+
+          NUMERBAY_USERNAME: ${{ secrets.NUMERBAY_USERNAME }}
+          NUMERBAY_PASSWORD: ${{ secrets.NUMERBAY_PASSWORD }}
+
+          MODEL_ID: ${{ secrets.MODEL_ID }}
+          NUMERBAY_PRODUCT_ID: ${{ secrets.NUMERBAY_PRODUCT_ID }}
+        run: |
+          python << 'EOF'
+          import os
+          import time
+          from datetime import datetime, timezone
+
+          from numerapi import CryptoAPI
+
+          # Wait until 12:51 UTC
+          now = datetime.now(timezone.utc)
+          target = now.replace(hour=12, minute=51, second=0, microsecond=0)
+
+          if False:
+              wait_seconds = (target - now).total_seconds()
+              print(f"Sleeping for {wait_seconds:.0f} seconds...")
+              time.sleep(wait_seconds)
+
+          print("Reached relay time.")
+
+          api = CryptoAPI(
+              public_id=os.environ["NUMERAI_PUBLIC_ID"],
+              secret_key=os.environ["NUMERAI_SECRET_KEY"],
+          )
+          
+          # Preserve original filename assigned by NumerAPI
+          downloaded_file = api.download_submission(
+              model_id=os.environ["MODEL_ID"]
+          )
+          
+          print(f"Downloaded file: {downloaded_file}")
+          
+          # NumerBay upload
+          from numerbay import NumerBay
+          
+          nb = NumerBay(
+              username=os.environ["NUMERBAY_USERNAME"],
+              password=os.environ["NUMERBAY_PASSWORD"]
+          )
+          
+          product_id = os.environ["NUMERBAY_PRODUCT_ID"]
+          
+          print("Uploading to NumerBay...")
+          
+          nb.upload_artifact(
+              product_id=product_id,
+              file_path=downloaded_file
+          )
+          
+          print("Upload complete.")
+          EOF
