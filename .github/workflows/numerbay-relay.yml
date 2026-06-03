@@ -3,7 +3,7 @@ name: NumerBay Relay
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "0 10 * * *"
 
 jobs:
   relay:
