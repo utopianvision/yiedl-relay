@@ -45,7 +45,7 @@ jobs:
           now = datetime.now(timezone.utc)
           target = now.replace(hour=12, minute=51, second=0, microsecond=0)
 
-          if False:
+          if now < target:
               wait_seconds = (target - now).total_seconds()
               print(f"Sleeping for {wait_seconds:.0f} seconds...")
               time.sleep(wait_seconds)
