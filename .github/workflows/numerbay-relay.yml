@@ -32,7 +32,7 @@ jobs:
           NUMERBAY_PASSWORD: ${{ secrets.NUMERBAY_PASSWORD }}
 
           MODEL_ID: ${{ secrets.MODEL_ID }}
-          NUMERBAY_PRODUCT_ID: ${{ secrets.NUMERBAY_PRODUCT_ID }}
+          NUMERBAY_PRODUCT: ${{ secrets.NUMERBAY_PRODUCT }}
         run: |
           python << 'EOF'
           import os
@@ -72,13 +72,11 @@ jobs:
               password=os.environ["NUMERBAY_PASSWORD"]
           )
           
-          product_id = os.environ["NUMERBAY_PRODUCT_ID"]
-          
           print("Uploading to NumerBay...")
           
           nb.upload_artifact(
-              product_id=product_id,
-              file_path=downloaded_file
+              file_path=downloaded_file,
+              product_full_name=os.environ["NUMERBAY_PRODUCT"]
           )
           
           print("Upload complete.")
