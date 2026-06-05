@@ -37,7 +37,7 @@ jobs:
           import time
 
           now = datetime.now(timezone.utc)
-          target = now.replace(hour=12, minute=1, second=0, microsecond=0)
+          target = now.replace(hour=12, minute=5, second=0, microsecond=0)
 
           if now < target:
               time.sleep((target - now).total_seconds())
