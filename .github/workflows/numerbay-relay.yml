@@ -37,6 +37,7 @@ jobs:
           python << 'EOF'
           import os
           import time
+          import traceback
           from datetime import datetime, timezone
 
           from numerapi import CryptoAPI
@@ -56,28 +57,49 @@ jobs:
               public_id=os.environ["NUMERAI_PUBLIC_ID"],
               secret_key=os.environ["NUMERAI_SECRET_KEY"],
           )
-          
+
           # Preserve original filename assigned by NumerAPI
           downloaded_file = api.download_submission(
               model_id=os.environ["MODEL_ID"]
           )
-          
+
           print(f"Downloaded file: {downloaded_file}")
-          
+
           # NumerBay upload
           from numerbay import NumerBay
-          
+
           nb = NumerBay(
               username=os.environ["NUMERBAY_USERNAME"],
               password=os.environ["NUMERBAY_PASSWORD"]
           )
-          
+
           print("Uploading to NumerBay...")
-          
-          nb.upload_artifact(
-              file_path=downloaded_file,
-              product_full_name=os.environ["NUMERBAY_PRODUCT"]
-          )
-          
+
+          try:
+              nb.upload_artifact(
+                  file_path=downloaded_file,
+                  product_full_name=os.environ["NUMERBAY_PRODUCT"]
+              )
+          except Exception as exc:
+              print(f"NumerBay upload failed: {type(exc).__name__}: {exc}")
+
+              response = getattr(exc, "response", None)
+              if response is not None:
+                  print(f"HTTP status: {getattr(response, 'status_code', 'unknown')}")
+                  print(f"HTTP headers: {getattr(response, 'headers', {})}")
+                  body = getattr(response, "text", "")
+                  print("HTTP body:")
+                  print(body[:4000] if body else "<empty response body>")
+
+                  try:
+                      json_payload = response.json()
+                      print("JSON payload:")
+                      print(json_payload)
+                  except Exception as json_exc:
+                      print(f"Could not parse response as JSON: {type(json_exc).__name__}: {json_exc}")
+
+              traceback.print_exc()
+              raise
+
           print("Upload complete.")
           EOF
