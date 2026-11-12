@@ -23,7 +23,7 @@ jobs:
           pip install --upgrade pip
           pip install numerapi numerbay
 
-      - name: Wait until 13:51 UTC, download submission, upload to NumerBay
+      - name: Wait until 12:51 UTC, download submission, upload to NumerBay
         env:
           NUMERAI_PUBLIC_ID: ${{ secrets.NUMERAI_PUBLIC_ID }}
           NUMERAI_SECRET_KEY: ${{ secrets.NUMERAI_SECRET_KEY }}
@@ -42,9 +42,9 @@ jobs:
 
           from numerapi import CryptoAPI
 
-          # Wait until 13:51 UTC
+          # Wait until 12:51 UTC
           now = datetime.now(timezone.utc)
-          target = now.replace(hour=13, minute=51, second=0, microsecond=0)
+          target = now.replace(hour=12, minute=51, second=0, microsecond=0)
 
           if now < target:
               wait_seconds = (target - now).total_seconds()
