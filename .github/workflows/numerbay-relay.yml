@@ -31,8 +31,8 @@ jobs:
           NUMERBAY_USERNAME: ${{ secrets.NUMERBAY_USERNAME }}
           NUMERBAY_PASSWORD: ${{ secrets.NUMERBAY_PASSWORD }}
 
-          MODEL_ID: ${{ secrets.MODEL_ID }}
-          NUMERBAY_PRODUCT: ${{ secrets.NUMERBAY_PRODUCT }}
+          MODEL_ID: "0a07d661-ba3d-4236-9746-f01fb6bd4fd5"
+          NUMERBAY_PRODUCT: "crypto-predictions-utopic_peak"
         run: |
           python << 'EOF'
           import os
