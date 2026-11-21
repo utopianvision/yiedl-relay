@@ -62,13 +62,13 @@ jobs:
 
           # Preserve original filename assigned by NumerAPI
           file1 = api.download_submission(
-              model1=os.environ["MODEL1"]
+              model_id=os.environ["MODEL1"]
           )
           print(f"Downloaded file: {file1}")
 
           
           file2 = api.download_submission(
-              model2=os.environ["MODEL2"]
+              model_id=os.environ["MODEL2"]
           )
           print(f"Downloaded file: {file2}")
 
@@ -85,7 +85,7 @@ jobs:
           try:
               nb.upload_artifact(
                   file_path=file1,
-                  product1=os.environ["PRODUCT1"]
+                  product_full_name=os.environ["PRODUCT1"]
               )
           except Exception as exc:
               print(f"NumerBay upload failed: {type(exc).__name__}: {exc}")
@@ -111,7 +111,7 @@ jobs:
           try:
               nb.upload_artifact(
                   file_path=file2,
-                  product2=os.environ["PRODUCT2"]
+                  product_full_name=os.environ["PRODUCT2"]
               )
           except Exception as exc:
               print(f"NumerBay upload failed: {type(exc).__name__}: {exc}")
