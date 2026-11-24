@@ -43,6 +43,21 @@ jobs:
           from datetime import datetime, timezone
 
           from numerapi import CryptoAPI
+          from requests.exceptions import RequestException
+
+          def download_submission_with_retry(api, model_id, attempts=4, base_delay=3):
+              for attempt in range(1, attempts + 1):
+                  try:
+                      return api.download_submission(model_id=model_id)
+                  except (RequestException, ConnectionError, OSError) as exc:
+                      if attempt == attempts:
+                          raise
+                      delay = base_delay * attempt
+                      print(
+                          f"Download failed for {model_id} (attempt {attempt}/{attempts}): "
+                          f"{type(exc).__name__}: {exc}. Retrying in {delay}s..."
+                      )
+                      time.sleep(delay)
 
           # Wait until 12:51 UTC
           now = datetime.now(timezone.utc)
@@ -61,13 +76,14 @@ jobs:
           )
 
           # Preserve original filename assigned by NumerAPI
-          file1 = api.download_submission(
+          file1 = download_submission_with_retry(
+              api,
               model_id=os.environ["MODEL1"]
           )
           print(f"Downloaded file: {file1}")
 
-          
-          file2 = api.download_submission(
+          file2 = download_submission_with_retry(
+              api,
               model_id=os.environ["MODEL2"]
           )
           print(f"Downloaded file: {file2}")
